@@ -184,3 +184,82 @@
 - [ ] Thiết lập quy trình làm việc (Asset Pipeline) rõ ràng cho việc tạo và nhập tài sản.
 - [ ] Tạo các công cụ Debugging (Hiển thị colliders, trạng thái AI, stats...). Sử dụng các `Helpers` của ThreeJS.
 - [ ] Thiết lập và sử dụng hệ thống quản lý phiên bản (Version Control) như Git.
+
+## XI. Tối ưu hiệu năng (Performance Optimization)
+
+- [ ] **Phân tích & Đo lường (Profiling):**
+    - [ ] Sử dụng công cụ Performance trong trình duyệt (Chrome DevTools, Firefox Profiler) để xác định các điểm nghẽn (bottlenecks) về CPU và GPU.
+        * _Kết quả: Xác định được các hàm JavaScript tốn thời gian nhất và các giai đoạn render tốn tài nguyên nhất._
+    - [ ] Sử dụng `stats.js` hoặc thư viện tương tự để hiển thị FPS và lượng bộ nhớ sử dụng theo thời gian thực trong quá trình phát triển.
+        * _Kết quả: Có thể theo dõi FPS và bộ nhớ trực tiếp khi chơi thử để phát hiện sớm các vấn đề hiệu năng._
+
+- [ ] **Tối ưu Rendering (GPU):**
+    - [ ] **Giảm Draw Calls:**
+        - [ ] Sử dụng `InstancedMesh` cho các đối tượng giống hệt nhau xuất hiện nhiều lần (vd: kẻ địch cùng loại, particle, cỏ...).
+            * _Kết quả: Giảm đáng kể số lệnh vẽ gửi đến GPU, cải thiện FPS khi có nhiều đối tượng giống nhau._
+        - [ ] Gộp Geometry (Geometry Merging) cho các đối tượng tĩnh không thay đổi bằng `BufferGeometryUtils.mergeBufferGeometries`.
+            * _Kết quả: Gộp nhiều đối tượng tĩnh thành một đối tượng duy nhất, giảm draw calls cho môi trường._
+        - [ ] Sử dụng Texture Atlas (gộp nhiều texture nhỏ vào một texture lớn) để giảm số lần chuyển đổi material.
+            * _Kết quả: Tăng tốc độ render khi các đối tượng dùng chung atlas, giảm draw calls nếu các đối tượng dùng chung material._
+    - [ ] **Tối ưu Geometry:**
+        - [ ] Sử dụng `BufferGeometry` thay vì `Geometry` (ThreeJS cũ).
+            * _Kết quả: Sử dụng cấu trúc geometry hiện đại, hiệu quả hơn của ThreeJS._
+        - [ ] Giảm độ phức tạp của model (số lượng vertices/polygons), đặc biệt là các đối tượng xuất hiện nhiều hoặc ở xa.
+            * _Kết quả: Giảm tải xử lý cho GPU, tăng tốc độ render._
+        - [ ] Triển khai Level of Detail (LOD) cho các model phức tạp (hiển thị model đơn giản hơn khi ở xa camera).
+            * _Kết quả: Giảm độ phức tạp hình học cần render dựa trên khoảng cách, cải thiện hiệu năng ở các cảnh rộng._
+    - [ ] **Tối ưu Materials & Shaders:**
+        - [ ] Tái sử dụng Material bất cứ khi nào có thể thay vì tạo mới cho mỗi đối tượng.
+            * _Kết quả: Giảm bộ nhớ GPU và số lần biên dịch shader._
+        - [ ] Sử dụng các loại Material đơn giản hơn khi không cần hiệu ứng phức tạp (vd: `MeshBasicMaterial` nếu không cần ánh sáng).
+            * _Kết quả: Giảm độ phức tạp tính toán của shader trên GPU._
+    - [ ] **Tối ưu Ánh sáng & Bóng đổ:**
+        - [ ] Hạn chế số lượng nguồn sáng động, đặc biệt là nguồn sáng đổ bóng.
+            * _Kết quả: Giảm số lần render scene cho shadow map._
+        - [ ] Tinh chỉnh kích thước shadow map (`light.shadow.mapSize`) phù hợp, không quá lớn nếu không cần thiết.
+            * _Kết quả: Giảm bộ nhớ GPU và thời gian tính toán shadow map._
+        - [ ] Tắt đổ bóng (`castShadow = false`, `receiveShadow = false`) cho các đối tượng nhỏ, xa hoặc không quan trọng.
+            * _Kết quả: Giảm số lượng đối tượng cần tính toán trong quá trình tạo shadow map._
+        - [ ] (Nâng cao) Cân nhắc sử dụng Light Baking cho các khu vực tĩnh để giảm tải tính toán ánh sáng động.
+            * _Kết quả: Ánh sáng và bóng tĩnh được "nướng" vào texture, giảm gần như toàn bộ chi phí tính toán ánh sáng/bóng động cho các khu vực đó._
+    - [ ] **Frustum Culling:**
+        - [ ] Đảm bảo các đối tượng nằm ngoài tầm nhìn của camera không bị render (ThreeJS tự động làm việc này, nhưng cần kiểm tra nếu có đối tượng tự quản lý visibility).
+            * _Kết quả: GPU chỉ xử lý các đối tượng thực sự nhìn thấy được._
+
+- [ ] **Tối ưu Logic Game (CPU):**
+    - [ ] **Object Pooling:**
+        - [ ] Tạo sẵn và tái sử dụng các đối tượng thường xuyên tạo/hủy (đạn, hiệu ứng particle, kẻ địch đơn giản...) thay vì tạo mới và để garbage collector dọn dẹp.
+            * _Kết quả: Giảm thiểu việc cấp phát/thu hồi bộ nhớ, tránh các đợt "khựng" do Garbage Collection gây ra._
+    - [ ] **Tối ưu Thuật toán:**
+        - [ ] Xem xét lại các thuật toán phức tạp (AI, pathfinding, procedural generation) để tìm cách cải thiện hiệu quả.
+        * _Kết quả: Giảm thời gian xử lý của CPU trong mỗi frame._
+        - [ ] Tránh các tính toán nặng trong vòng lặp game chính nếu có thể (vd: tính toán lại pathfinding chỉ khi cần thiết, không phải mỗi frame).
+            * _Kết quả: Phân bổ tải CPU hợp lý hơn, tránh làm nghẽn vòng lặp chính._
+    - [ ] **Web Workers:**
+        - [ ] Chuyển các tác vụ nặng, không cần chạy đồng bộ với rendering (như pathfinding, sinh level phức tạp) sang Web Workers để chạy trên luồng riêng.
+            * _Kết quả: Giải phóng luồng chính (main thread) để tập trung vào rendering và xử lý input, giúp game mượt mà hơn._
+    - [ ] **Tối ưu Physics:**
+        - [ ] Sử dụng các hình dạng va chạm (collision shapes) đơn giản nhất có thể (Box, Sphere tốt hơn Capsule, Capsule tốt hơn Convex Hull, Convex Hull tốt hơn Trimesh).
+            * _Kết quả: Giảm thời gian tính toán va chạm của physics engine._
+        - [ ] Tinh chỉnh số lần lặp của bộ giải vật lý (solver iterations) để cân bằng giữa độ chính xác và hiệu năng.
+            * _Kết quả: Tìm điểm cân bằng phù hợp cho game, tránh lãng phí CPU cho độ chính xác vật lý không cần thiết._
+        - [ ] Cập nhật vật lý ở tần số cố định (fixed timestep) thay vì mỗi frame render để đảm bảo tính ổn định và có thể tách rời logic vật lý.
+            * _Kết quả: Hành vi vật lý ổn định hơn, không phụ thuộc vào FPS._
+
+- [ ] **Tối ưu Bộ nhớ (Memory):**
+    - [ ] **Quản lý Tài nguyên:**
+        - [ ] Gọi `.dispose()` trên Geometries, Materials, Textures khi chúng không còn được sử dụng để giải phóng bộ nhớ GPU và CPU.
+            * _Kết quả: Tránh rò rỉ bộ nhớ, đặc biệt là bộ nhớ GPU vốn hạn chế hơn._
+        - [ ] Hủy các đối tượng và event listener không cần thiết.
+            * _Kết quả: Giảm rò rỉ bộ nhớ JavaScript._
+    - [ ] **Tối ưu Assets:**
+        - [ ] Sử dụng các định dạng nén hiệu quả cho texture (KTX2 với Basis Universal) và model (glTF với Draco compression).
+            * _Kết quả: Giảm kích thước file tài nguyên, tải nhanh hơn và tốn ít bộ nhớ hơn._
+        - [ ] Giảm độ phân giải của texture nếu chúng không cần quá chi tiết (đặc biệt là các texture cho vật thể nhỏ hoặc xa).
+            * _Kết quả: Giảm đáng kể bộ nhớ GPU sử dụng._
+
+- [ ] **Tối ưu Tải Game (Loading):**
+    - [ ] Sử dụng lazy loading (tải tài nguyên khi cần thiết, vd: tải asset của level tiếp theo khi người chơi đến gần cửa chuyển level).
+        * _Kết quả: Giảm thời gian tải ban đầu, phân bổ việc tải tài nguyên ra nhiều thời điểm._
+    - [ ] Ưu tiên tải các asset quan trọng trước.
+        * _Kết quả: Người chơi có thể bắt đầu chơi sớm hơn trong khi các asset phụ vẫn đang được tải nền._
